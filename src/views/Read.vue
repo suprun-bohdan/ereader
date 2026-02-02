@@ -1,13 +1,13 @@
 <template>
 	<div class="ereader-read">
-		<header class="ereader-read__header">
+		<header v-if="!isMobile" class="ereader-read__header">
 			<router-link :to="{ name: 'Library' }" class="ereader-read__back">{{ t('ereader', 'Back to library') }}</router-link>
 		</header>
 		<div class="ereader-read__area">
 			<div v-if="error" class="ereader-read__error">{{ error }}</div>
 			<div v-else-if="!isEpub && loadingPdf" class="ereader-read__loading">{{ t('ereader', 'Loading…') }}</div>
 			<EpubViewer v-else-if="isEpub" :url="streamUrl" />
-			<iframe v-else-if="pdfBlobUrl" :src="pdfBlobUrl" class="ereader-read__iframe" title="Book content"></iframe>
+			<PdfViewer v-else-if="pdfBlob" :blob="pdfBlob" />
 		</div>
 	</div>
 </template>
@@ -16,12 +16,14 @@
 import { getStreamUrl, getStreamBlob } from '../router/api'
 import { translate as t } from '@nextcloud/l10n'
 import EpubViewer from '../components/EpubViewer.vue'
+import PdfViewer from '../components/PdfViewer.vue'
 
 const MIME_EPUB = 'application/epub+zip'
+const MOBILE_BREAKPOINT = 768
 
 export default {
 	name: 'Read',
-	components: { EpubViewer },
+	components: { EpubViewer, PdfViewer },
 	props: {
 		fileId: {
 			type: [String, Number],
@@ -32,7 +34,8 @@ export default {
 		return {
 			error: '',
 			loadingPdf: false,
-			pdfBlobUrl: null,
+			pdfBlob: null,
+			windowWidth: typeof window !== 'undefined' ? window.innerWidth : 1024,
 		}
 	},
 	computed: {
@@ -42,30 +45,34 @@ export default {
 		isEpub() {
 			return this.$route.query?.mime === MIME_EPUB
 		},
+		isMobile() {
+			return this.windowWidth <= MOBILE_BREAKPOINT
+		},
 	},
 	async mounted() {
+		window.addEventListener('resize', this.onResize)
 		if (this.isEpub) return
 		this.loadingPdf = true
 		this.error = ''
 		try {
-			const blob = await getStreamBlob(Number(this.fileId))
-			this.pdfBlobUrl = URL.createObjectURL(blob)
+			this.pdfBlob = await getStreamBlob(Number(this.fileId))
 		} catch (e) {
 			this.error = e.response?.status === 403
-				? this.t('ereader', 'Access denied. Please refresh the page and try again.')
-				: (e.message || this.t('ereader', 'Failed to load the file.'))
+				? t('ereader', 'Access denied. Please refresh the page and try again.')
+				: (e.message || t('ereader', 'Failed to load the file.'))
 		} finally {
 			this.loadingPdf = false
 		}
 	},
 	beforeUnmount() {
-		if (this.pdfBlobUrl) {
-			URL.revokeObjectURL(this.pdfBlobUrl)
-			this.pdfBlobUrl = null
-		}
+		window.removeEventListener('resize', this.onResize)
+		this.pdfBlob = null
 	},
 	methods: {
 		t,
+		onResize() {
+			this.windowWidth = window.innerWidth
+		},
 	},
 }
 </script>
@@ -74,8 +81,8 @@ export default {
 .ereader-read {
 	display: flex;
 	flex-direction: column;
-	height: 100vh;
-	min-height: 100vh;
+	height: 100%;
+	min-height: 0;
 	width: 100%;
 	max-width: 100vw;
 	box-sizing: border-box;
@@ -84,12 +91,14 @@ export default {
 .ereader-read__header {
 	flex-shrink: 0;
 	padding: 0.5rem 1rem;
-	background: var(--color-background-hover, #f5f5f5);
-	border-bottom: 1px solid var(--color-border, #ddd);
+	background: var(--ereader-action-bar);
+	color: var(--ereader-primary-text);
+	border-bottom: 1px solid var(--ereader-border);
 }
 .ereader-read__back {
-	color: var(--color-primary, #0082c9);
+	color: inherit;
 	text-decoration: none;
+	font-weight: 500;
 }
 .ereader-read__back:hover {
 	text-decoration: underline;
@@ -101,15 +110,6 @@ export default {
 	width: 100%;
 	overflow: hidden;
 }
-.ereader-read__iframe {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	min-width: 100%;
-	min-height: 100%;
-	border: none;
-}
 .ereader-read__error,
 .ereader-read__loading {
 	position: absolute;
@@ -119,9 +119,9 @@ export default {
 	justify-content: center;
 	padding: 2rem;
 	text-align: center;
-	color: var(--color-text-lighter, #666);
+	color: var(--ereader-text-secondary);
 }
 .ereader-read__error {
-	color: var(--color-error, #c00);
+	color: var(--ereader-error);
 }
 </style>

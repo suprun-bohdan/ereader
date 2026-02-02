@@ -10,14 +10,7 @@
 		<div v-if="loading" class="ereader-library__loading">{{ t('ereader', 'Loading…') }}</div>
 		<div v-else-if="error" class="ereader-library__error">{{ error }}</div>
 		<ul v-else class="ereader-library__list">
-			<li v-for="book in books" :key="book.id" class="ereader-library__item">
-				<router-link :to="{ name: 'Read', params: { fileId: book.id }, query: { mime: book.mime } }" class="ereader-library__link">
-					<div class="ereader-library__cover">
-						<span class="ereader-library__cover-icon">{{ book.mime === 'application/pdf' ? '📕' : '📘' }}</span>
-					</div>
-					<span class="ereader-library__name">{{ book.name }}</span>
-				</router-link>
-			</li>
+			<BookCard v-for="book in books" :key="book.id" :book="book" />
 			<li v-if="books.length === 0" class="ereader-library__empty">
 				{{ t('ereader', 'No books found. Add EPUB or PDF files to your books folder.') }}
 			</li>
@@ -28,9 +21,11 @@
 <script>
 import { getBooks } from '../router/api'
 import { translate as t } from '@nextcloud/l10n'
+import BookCard from '../components/BookCard.vue'
 
 export default {
 	name: 'Library',
+	components: { BookCard },
 	data() {
 		return {
 			books: [],
@@ -40,9 +35,10 @@ export default {
 	},
 	async mounted() {
 		try {
-			this.books = await getBooks()
+			const data = await getBooks()
+			this.books = Array.isArray(data) ? data : (data?.books ?? [])
 		} catch (e) {
-			this.error = e.message || this.t('ereader', 'Failed to load books')
+			this.error = e.message || t('ereader', 'Failed to load books')
 		} finally {
 			this.loading = false
 		}
@@ -56,6 +52,9 @@ export default {
 <style scoped>
 .ereader-library {
 	padding: 1.5rem;
+	min-height: 100%;
+	background: var(--ereader-shelf-background);
+	border-top: 3px solid var(--ereader-shelf-divider);
 }
 .ereader-library__header {
 	display: flex;
@@ -68,11 +67,13 @@ export default {
 .ereader-library__title {
 	margin: 0;
 	font-size: 1.5rem;
+	color: var(--ereader-text);
 }
 .ereader-library__setup-link {
 	font-size: 0.9rem;
-	color: var(--color-primary-element, #0082c9);
+	color: var(--ereader-primary);
 	text-decoration: none;
+	font-weight: 500;
 }
 .ereader-library__setup-link:hover {
 	text-decoration: underline;
@@ -83,51 +84,16 @@ export default {
 	padding: 0;
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-	gap: 1rem;
-}
-.ereader-library__item {
-	margin: 0;
-}
-.ereader-library__link {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	text-decoration: none;
-	color: var(--color-main-text, #000);
-	padding: 0.75rem;
-	border-radius: 8px;
-	background: var(--color-background-hover, #f5f5f5);
-	transition: background 0.2s;
-}
-.ereader-library__link:hover {
-	background: var(--color-background-dark, #e5e5e5);
-}
-.ereader-library__cover {
-	width: 80px;
-	height: 110px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: var(--color-background-dark, #e0e0e0);
-	border-radius: 4px;
-	margin-bottom: 0.5rem;
-}
-.ereader-library__cover-icon {
-	font-size: 2.5rem;
-}
-.ereader-library__name {
-	font-size: 0.9rem;
-	text-align: center;
-	word-break: break-word;
+	gap: 1.25rem;
 }
 .ereader-library__loading,
 .ereader-library__error,
 .ereader-library__empty {
 	padding: 2rem;
 	text-align: center;
-	color: var(--color-text-lighter, #666);
+	color: var(--ereader-text-secondary);
 }
 .ereader-library__error {
-	color: var(--color-error, #c00);
+	color: var(--ereader-error);
 }
 </style>
