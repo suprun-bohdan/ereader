@@ -14,6 +14,7 @@
 </template>
 
 <script>
+import { markRaw } from 'vue'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import * as pdfjsLib from 'pdfjs-dist'
@@ -45,8 +46,12 @@ export default {
 	},
 	beforeUnmount() {
 		this.canvasRefs = {}
-		if (this.pdfDoc) {
-			this.pdfDoc.destroy()
+		if (this.pdfDoc && typeof this.pdfDoc.destroy === 'function') {
+			try {
+				this.pdfDoc.destroy()
+			} catch (_) {
+				// ignore cleanup errors
+			}
 			this.pdfDoc = null
 		}
 	},
@@ -60,9 +65,11 @@ export default {
 			this.error = ''
 			try {
 				const data = await this.blob.arrayBuffer()
-				this.pdfDoc = await pdfjsLib.getDocument({ data }).promise
+				const doc = await pdfjsLib.getDocument({ data }).promise
+				this.pdfDoc = markRaw(doc)
 				this.numPages = this.pdfDoc.numPages
 				this.loading = false
+				await this.$nextTick()
 				await this.$nextTick()
 				await this.renderAllPages()
 			} catch (e) {
