@@ -1,0 +1,80 @@
+/**
+ * e-reader dashboard widget: book shelf style (inspired by recent books widget).
+ */
+.ereader-widget {
+	padding: 0.5rem 0;
+}
+
+.ereader-widget__shelf {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: flex-end;
+	min-height: 4rem;
+	margin-bottom: 0.75rem;
+}
+
+.ereader-widget__book {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-decoration: none;
+	color: var(--color-main-text, #000);
+	border-radius: 4px;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	max-width: 4.5rem;
+	min-width: 3rem;
+}
+
+.ereader-widget__book:hover {
+	transform: translateY(-2px);
+}
+
+.ereader-widget__book-spine {
+	width: 100%;
+	height: 3.5rem;
+	border-radius: 3px 3px 2px 2px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	font-size: 1.5rem;
+	line-height: 1;
+}
+
+/* Alternate spine colors like a real shelf */
+.ereader-widget__book:nth-child(5n+1) .ereader-widget__book-spine { background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%); color: #f5deb3; }
+.ereader-widget__book:nth-child(5n+2) .ereader-widget__book-spine { background: linear-gradient(135deg, #2f4f4f 0%, #3d5c5c 100%); color: #e0f0f0; }
+.ereader-widget__book:nth-child(5n+3) .ereader-widget__book-spine { background: linear-gradient(135deg, #4a2c2a 0%, #5c3a37 100%); color: #f0e0e0; }
+.ereader-widget__book:nth-child(5n+4) .ereader-widget__book-spine { background: linear-gradient(135deg, #1e3a5f 0%, #2a4a6f 100%); color: #e0e8f0; }
+.ereader-widget__book:nth-child(5n+5) .ereader-widget__book-spine { background: linear-gradient(135deg, #3d3d2e 0%, #4d4d3e 100%); color: #f0f0e0; }
+
+.ereader-widget__book-title {
+	font-size: 0.65rem;
+	line-height: 1.2;
+	text-align: center;
+	margin-top: 0.25rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	max-height: 2.4em;
+}
+
+.ereader-widget__book--placeholder .ereader-widget__book-spine {
+	background: linear-gradient(135deg, #888 0%, #aaa 100%) !important;
+	color: #ddd;
+}
+
+.ereader-widget__open {
+	display: inline-block;
+	margin-top: 0.25rem;
+	font-size: 0.875rem;
+	color: var(--color-primary-element, #0082c9);
+	text-decoration: none;
+}
+
+.ereader-widget__open:hover {
+	text-decoration: underline;
+}
