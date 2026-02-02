@@ -36,6 +36,8 @@ class FileApiController extends Controller {
 		$response->addHeader('Content-Type', $file->getMimeType());
 		$response->addHeader('Content-Disposition', 'inline; filename="' . rawurlencode($file->getName()) . '"');
 		$response->addHeader('Content-Length', (string) $file->getSize());
+		// Allow embedding in iframe on same origin (required for PDF/EPUB viewer in Read view)
+		$response->addHeader('Content-Security-Policy', "frame-ancestors 'self'");
 		return $response;
 	}
 }
