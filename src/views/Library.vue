@@ -2,6 +2,9 @@
 	<div class="ereader-library">
 		<header class="ereader-library__header">
 			<h1 class="ereader-library__title">{{ t('ereader', 'Library') }}</h1>
+			<router-link :to="{ name: 'Setup' }" class="ereader-library__setup-link">
+				{{ t('ereader', 'Change books folder') }}
+			</router-link>
 		</header>
 
 		<div v-if="loading" class="ereader-library__loading">{{ t('ereader', 'Loading…') }}</div>
@@ -55,11 +58,24 @@ export default {
 	padding: 1.5rem;
 }
 .ereader-library__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
 	margin-bottom: 1.5rem;
 }
 .ereader-library__title {
 	margin: 0;
 	font-size: 1.5rem;
+}
+.ereader-library__setup-link {
+	font-size: 0.9rem;
+	color: var(--color-primary-element, #0082c9);
+	text-decoration: none;
+}
+.ereader-library__setup-link:hover {
+	text-decoration: underline;
 }
 .ereader-library__list {
 	list-style: none;
