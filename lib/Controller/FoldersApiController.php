@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Ereader\Controller\Api;
+namespace OCA\Ereader\Controller;
 
 use OCA\Ereader\Service\FoldersService;
 use OCP\AppFramework\ApiController;

@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\Ereader\Controller\Api;
+namespace OCA\Ereader\Controller;
 
 use OCA\Ereader\Service\FileService;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\StreamResponse;
+use OCP\AppFramework\Controller;
 use OCP\IRequest;
 
-class FileApiController extends \OCP\AppFramework\Controller {
+class FileApiController extends Controller {
 
 	public function __construct(
 		IRequest $request,
