@@ -179,6 +179,7 @@ export default {
 			selectedText: '',
 			textLayerRefs: {},
 			textLayers: {},
+			resizeObserver: null,
 		}
 	},
 	computed: {
@@ -188,7 +189,10 @@ export default {
 	},
 	watch: {
 		pagesPerView() {
-			this.$nextTick(() => this.renderAllPages())
+			this.$nextTick(async () => {
+				await this.computeFitPageScale()
+				await this.renderAllPages()
+			})
 		},
 	},
 	async mounted() {
@@ -200,6 +204,10 @@ export default {
 		this.textLayerRefs = {}
 		Object.values(this.textLayers).forEach((tl) => { if (tl && tl.cancel) tl.cancel() })
 		this.textLayers = {}
+		if (this.resizeObserver && this.$refs.scrollEl) {
+			this.resizeObserver.unobserve(this.$refs.scrollEl)
+			this.resizeObserver = null
+		}
 		if (this.$refs.scrollEl) {
 			this.$refs.scrollEl.removeEventListener('scroll', this.onScroll)
 		}
@@ -331,6 +339,13 @@ export default {
 				await this.renderAllPages()
 				if (this.$refs.scrollEl) {
 					this.$refs.scrollEl.addEventListener('scroll', this.onScroll, { passive: true })
+					this.resizeObserver = new ResizeObserver(() => {
+						this.$nextTick(() => {
+							this.computeFitPageScale()
+							this.renderAllPages()
+						})
+					})
+					this.resizeObserver.observe(this.$refs.scrollEl)
 				}
 			} catch (e) {
 				this.error = e.message || t('ereader', 'Failed to load PDF')
@@ -340,24 +355,22 @@ export default {
 		async computeFitPageScale() {
 			if (!this.pdfDoc || !this.$refs.scrollEl) return
 			const scrollEl = this.$refs.scrollEl
-			const w = scrollEl.clientWidth || 800
+			const perPage = Math.max(1, this.pagesPerView || 1)
+			const w = (scrollEl.clientWidth || 800) / perPage
 			const h = scrollEl.clientHeight || 600
 			const firstPage = await this.pdfDoc.getPage(1)
 			const vp = firstPage.getViewport({ scale: 1 })
 			const scaleW = w / vp.width
 			const scaleH = h / vp.height
 			const fitBoth = Math.min(scaleW, scaleH, this.maxScale)
-			this.fitPageScale = 1
-			this.fitWidthScale = Math.min(scaleW / fitBoth, this.maxScale)
-			if (this.scaleFactor === 1) {
-				this.scaleFactor = this.fitPageScale
-			}
+			this.fitPageScale = fitBoth
+			this.fitWidthScale = Math.min(scaleW, this.maxScale)
 		},
 		async renderAllPages() {
 			if (!this.pdfDoc || !this.$refs.containerEl || !this.$refs.scrollEl) return
 			const scrollEl = this.$refs.scrollEl
-			const viewWidth = scrollEl.clientWidth || 800
-			const viewHeight = scrollEl.clientHeight || 600
+			const viewWidth = Math.max(100, scrollEl.clientWidth || 800)
+			const viewHeight = Math.max(100, scrollEl.clientHeight || 600)
 			const perPage = Math.max(1, this.pagesPerView || 1)
 			const baseWidth = viewWidth / perPage
 			const baseHeight = viewHeight
@@ -368,13 +381,16 @@ export default {
 				const vp1 = page.getViewport({ scale: 1 })
 				const scaleByWidth = baseWidth / vp1.width
 				const scaleByHeight = baseHeight / vp1.height
-				const baseScale = Math.min(scaleByWidth, scaleByHeight)
+				// Use scaleByWidth so each page takes exactly baseWidth (one slot = one page when pagesPerView=1)
+				const baseScale = scaleByWidth
 				const effectiveScale = baseScale * this.scaleFactor * this.pixelRatio
 				const viewport = page.getViewport({ scale: effectiveScale })
 				canvas.width = viewport.width
 				canvas.height = viewport.height
-				canvas.style.width = (viewport.width / this.pixelRatio) + 'px'
-				canvas.style.height = (viewport.height / this.pixelRatio) + 'px'
+				const displayW = viewport.width / this.pixelRatio
+				const displayH = viewport.height / this.pixelRatio
+				canvas.style.width = displayW + 'px'
+				canvas.style.height = displayH + 'px'
 				const ctx = canvas.getContext('2d')
 				await page.render({
 					canvasContext: ctx,
@@ -386,9 +402,17 @@ export default {
 						this.textLayers[n].cancel()
 					}
 					textLayerEl.innerHTML = ''
+					// Use exact same dimensions as canvas display (so text aligns with canvas)
 					const displayViewport = page.getViewport({ scale: baseScale * this.scaleFactor })
-					textLayerEl.style.width = displayViewport.width + 'px'
-					textLayerEl.style.height = displayViewport.height + 'px'
+					textLayerEl.style.cssText = [
+						'width:' + displayW + 'px',
+						'height:' + displayH + 'px',
+						'left:0',
+						'top:0',
+						'padding:0',
+						'margin:0',
+						'box-sizing:border-box',
+					].join(';')
 					const textContent = await page.getTextContent()
 					const textLayer = new pdfjsLib.TextLayer({
 						textContentSource: textContent,
@@ -434,6 +458,7 @@ export default {
 
 .pdf-viewer__toolbar-group--page {
 	margin-left: auto;
+	flex-shrink: 0;
 }
 
 .pdf-viewer__btn {

@@ -68,7 +68,7 @@ export async function addDictionaryEntry(word, translation = null) {
 }
 
 export async function updateDictionaryEntry(id, translation) {
-	const { data } = await api.put(`/dictionary/${id}`, { translation })
+	const { data } = await api.post(`/dictionary/${id}`, { translation })
 	return data
 }
 
