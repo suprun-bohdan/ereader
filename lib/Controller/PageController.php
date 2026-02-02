@@ -21,17 +21,6 @@ class PageController extends Controller {
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function index(): TemplateResponse {
-		$response = new TemplateResponse('ereader', 'main');
-		$response->setContentSecurityPolicy(
-			(new \OCP\AppFramework\Http\ContentSecurityPolicy())
-				->addAllowedScriptDomain("'self'")
-				->addAllowedScriptDomain("'unsafe-inline'")
-				->addAllowedScriptDomain("blob:")
-				->addAllowedStyleDomain("'self'")
-				->addAllowedStyleDomain("'unsafe-inline'")
-				->addAllowedConnectDomain("'self'")
-				->addAllowedConnectDomain("data:")
-		);
-		return $response;
+		return new TemplateResponse('ereader', 'main');
 	}
 }
