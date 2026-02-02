@@ -42,19 +42,31 @@
 			>
 				{{ t('ereader', 'Fit page') }}
 			</button>
-			<div class="pdf-viewer__toolbar-group">
+			<div class="pdf-viewer__toolbar-group pdf-viewer__toolbar-group--pages">
 				<label class="pdf-viewer__label" for="pdf-pages-per-view">
 					{{ t('ereader', 'Pages on screen') }}
 				</label>
+				<button
+					v-for="n in [1, 2, 3]"
+					:key="n"
+					type="button"
+					class="pdf-viewer__btn pdf-viewer__btn--pages"
+					:class="{ 'pdf-viewer__btn--pages-active': pagesPerView === n }"
+					:title="t('ereader', 'Show {n} page(s)', { n })"
+					@click="setPagesPerView(n)"
+				>
+					{{ n }}
+				</button>
 				<input
 					id="pdf-pages-per-view"
-					v-model.number="pagesPerViewInput"
+					v-model="pagesPerViewInput"
 					type="number"
 					min="1"
 					:max="maxPagesPerView"
 					class="pdf-viewer__pages-input"
-					:title="t('ereader', 'Number of pages visible at once')"
+					:title="t('ereader', 'Number of pages visible at once (1–6)')"
 					@input="onPagesPerViewInput"
+					@change="onPagesPerViewChange"
 				/>
 			</div>
 			<div class="pdf-viewer__toolbar-group pdf-viewer__toolbar-group--page">
@@ -237,11 +249,21 @@ export default {
 				if (window.getSelection()) window.getSelection().removeAllRanges()
 			}
 		},
+		setPagesPerView(n) {
+			const clamped = Math.min(MAX_PAGES_PER_VIEW, Math.max(MIN_PAGES_PER_VIEW, Number(n)))
+			this.pagesPerViewInput = String(clamped)
+			this.pagesPerView = clamped
+		},
 		onPagesPerViewInput() {
+			this.applyPagesPerViewFromInput()
+		},
+		onPagesPerViewChange() {
+			this.applyPagesPerViewFromInput()
+		},
+		applyPagesPerViewFromInput() {
 			const v = parseInt(this.pagesPerViewInput, 10)
 			if (!Number.isFinite(v) || v < MIN_PAGES_PER_VIEW) {
-				this.pagesPerViewInput = String(MIN_PAGES_PER_VIEW)
-				this.pagesPerView = MIN_PAGES_PER_VIEW
+				this.pagesPerViewInput = String(this.pagesPerView)
 				return
 			}
 			const clamped = Math.min(MAX_PAGES_PER_VIEW, Math.max(MIN_PAGES_PER_VIEW, v))
@@ -440,6 +462,22 @@ export default {
 
 .pdf-viewer__btn--text {
 	font-size: 0.875rem;
+}
+
+.pdf-viewer__toolbar-group--pages {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.pdf-viewer__btn--pages {
+	min-width: 32px;
+	font-size: 0.875rem;
+	font-weight: 500;
+}
+
+.pdf-viewer__btn--pages-active {
+	background: rgba(255, 255, 255, 0.3);
 }
 
 .pdf-viewer__icon {
