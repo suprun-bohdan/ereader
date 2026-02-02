@@ -24,7 +24,11 @@ class FoldersApiController extends ApiController {
 	#[NoAdminRequired]
 	public function index(): DataResponse {
 		$path = (string) ($this->request->getParam('path') ?? '');
-		$folders = $this->foldersService->listFolders($path);
-		return new DataResponse($folders);
+		try {
+			$folders = $this->foldersService->listFolders($path);
+			return new DataResponse(['folders' => $folders]);
+		} catch (\Throwable $e) {
+			return new DataResponse(['error' => $e->getMessage(), 'folders' => []], 200);
+		}
 	}
 }

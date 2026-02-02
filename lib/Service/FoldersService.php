@@ -25,14 +25,22 @@ class FoldersService {
 		if ($user === null) {
 			return [];
 		}
-		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
-		$path = trim($path, '/');
+		try {
+			$userFolder = $this->rootFolder->getUserFolder($user->getUID());
+		} catch (\Throwable $e) {
+			throw new \RuntimeException('Failed to get user folder: ' . $e->getMessage(), 0, $e);
+		}
+		$path = trim((string) $path, '/');
 		$folder = $path === '' ? $userFolder : $this->getFolderAtPath($userFolder, $path);
 		if ($folder === null) {
 			return [];
 		}
 		$out = [];
-		$listing = $folder->getDirectoryListing();
+		try {
+			$listing = $folder->getDirectoryListing();
+		} catch (\Throwable $e) {
+			throw new \RuntimeException('Failed to list folder: ' . $e->getMessage(), 0, $e);
+		}
 		foreach ($listing as $node) {
 			if ($node instanceof Folder) {
 				$name = $node->getName();

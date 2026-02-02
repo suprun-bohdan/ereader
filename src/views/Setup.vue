@@ -77,9 +77,16 @@ export default {
 			this.loading = true
 			this.error = ''
 			try {
-				this.folders = await getFolders(this.path)
+				const data = await getFolders(this.path)
+				if (data && typeof data === 'object') {
+					this.folders = Array.isArray(data.folders) ? data.folders : (Array.isArray(data) ? data : [])
+					this.error = data.error ? String(data.error) : ''
+				} else {
+					this.folders = Array.isArray(data) ? data : []
+					this.error = ''
+				}
 			} catch (e) {
-				this.error = e.message || this.t('ereader', 'Failed to load folders')
+				this.error = e.response?.data?.error || e.message || this.t('ereader', 'Failed to load folders')
 				this.folders = []
 			} finally {
 				this.loading = false
