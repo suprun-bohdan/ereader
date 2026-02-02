@@ -4,10 +4,11 @@
 			<router-link :to="{ name: 'Library' }" class="ereader-read__back">{{ t('ereader', 'Back to library') }}</router-link>
 		</header>
 		<div class="ereader-read__area">
+			<div v-if="dictMessage" class="ereader-read__toast">{{ dictMessage }}</div>
 			<div v-if="error" class="ereader-read__error">{{ error }}</div>
 			<div v-else-if="!isEpub && loadingPdf" class="ereader-read__loading">{{ t('ereader', 'Loading…') }}</div>
-			<EpubViewer v-else-if="isEpub" :url="streamUrl" />
-			<PdfViewer v-else-if="pdfBlob" :blob="pdfBlob" />
+			<EpubViewer v-else-if="isEpub" :url="streamUrl" @add-to-dictionary="onAddToDictionary" />
+			<PdfViewer v-else-if="pdfBlob" :blob="pdfBlob" @add-to-dictionary="onAddToDictionary" />
 		</div>
 	</div>
 </template>
@@ -36,6 +37,7 @@ export default {
 			loadingPdf: false,
 			pdfBlob: null,
 			windowWidth: typeof window !== 'undefined' ? window.innerWidth : 1024,
+			dictMessage: '',
 		}
 	},
 	computed: {
@@ -123,5 +125,18 @@ export default {
 }
 .ereader-read__error {
 	color: var(--ereader-error);
+}
+.ereader-read__toast {
+	position: absolute;
+	top: 1rem;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 50;
+	padding: 0.5rem 1rem;
+	background: var(--ereader-primary);
+	color: var(--ereader-primary-text);
+	border-radius: var(--ereader-radius-sm);
+	font-size: 0.9rem;
+	box-shadow: var(--ereader-card-shadow);
 }
 </style>

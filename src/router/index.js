@@ -14,6 +14,11 @@ const routes = [
 		component: () => import('../views/Library.vue'),
 	},
 	{
+		path: '/dictionary',
+		name: 'Dictionary',
+		component: () => import('../views/Dictionary.vue'),
+	},
+	{
 		path: '/read/:fileId',
 		name: 'Read',
 		component: () => import('../views/Read.vue'),
@@ -27,7 +32,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-	if (to.name === 'Setup') {
+	if (to.name === 'Setup' || to.name === 'Dictionary') {
 		next()
 		return
 	}

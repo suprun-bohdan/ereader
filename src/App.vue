@@ -67,6 +67,7 @@ export default {
 			const name = this.$route.name
 			if (name === 'Library') return t('ereader', 'Library')
 			if (name === 'Setup') return t('ereader', 'Choose books folder')
+			if (name === 'Dictionary') return t('ereader', 'Dictionary')
 			if (name === 'Read') return t('ereader', 'Reading')
 			return t('ereader', 'e-Reader')
 		},

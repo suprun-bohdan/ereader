@@ -57,6 +57,25 @@ export async function deleteBookmark(id) {
 	await api.delete(`/bookmarks/${id}`)
 }
 
+export async function getDictionary() {
+	const { data } = await api.get('/dictionary')
+	return data
+}
+
+export async function addDictionaryEntry(word, translation = null) {
+	const { data } = await api.post('/dictionary', { word: word.trim(), translation: translation || null })
+	return data
+}
+
+export async function updateDictionaryEntry(id, translation) {
+	const { data } = await api.put(`/dictionary/${id}`, { translation })
+	return data
+}
+
+export async function deleteDictionaryEntry(id) {
+	await api.delete(`/dictionary/${id}`)
+}
+
 export function getStreamUrl(fileId) {
 	return generateUrl(`/apps/ereader/api/v1/file/${fileId}/stream`)
 }

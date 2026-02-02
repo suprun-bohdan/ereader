@@ -18,6 +18,11 @@ return [
 		['name' => 'bookmark_api#create', 'url' => '/api/v1/bookmarks/{fileId}', 'verb' => 'POST'],
 		['name' => 'bookmark_api#delete', 'url' => '/api/v1/bookmarks/{id}', 'verb' => 'DELETE'],
 
+		['name' => 'dictionary_api#index', 'url' => '/api/v1/dictionary', 'verb' => 'GET'],
+		['name' => 'dictionary_api#create', 'url' => '/api/v1/dictionary', 'verb' => 'POST'],
+		['name' => 'dictionary_api#update', 'url' => '/api/v1/dictionary/{id}', 'verb' => 'PUT'],
+		['name' => 'dictionary_api#delete', 'url' => '/api/v1/dictionary/{id}', 'verb' => 'DELETE'],
+
 		['name' => 'config_api#preflighted_cors', 'url' => '/api/v1/{path}', 'verb' => 'OPTIONS', 'requirements' => ['path' => '.+']],
 	],
 ];
