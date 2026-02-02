@@ -6,6 +6,7 @@ namespace OCA\Ereader\Controller;
 
 use OCA\Ereader\Service\FileService;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\StreamResponse;
 use OCP\AppFramework\Controller;
@@ -21,6 +22,7 @@ class FileApiController extends Controller {
 	}
 
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function stream(int $fileId): StreamResponse|DataResponse {
 		$file = $this->fileService->getFileById($fileId);
 		if ($file === null) {
