@@ -1,3 +1,8 @@
+/* Offset for Nextcloud header so fixed drawer/backdrop do not overlap it */
+:root {
+	--nextcloud-header-height: 50px;
+}
+
 /* App container: full width and responsive */
 #ereader-app,
 .ereader-app {

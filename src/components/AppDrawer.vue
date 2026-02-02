@@ -91,11 +91,11 @@ export default {
 <style scoped>
 .app-drawer {
 	position: fixed;
-	top: 0;
+	top: var(--nextcloud-header-height, 50px);
 	left: 0;
 	z-index: 100;
 	width: var(--ereader-drawer-width, 260px);
-	height: 100vh;
+	height: calc(100vh - var(--nextcloud-header-height, 50px));
 	background: var(--ereader-surface);
 	box-shadow: var(--ereader-card-shadow);
 	display: flex;
@@ -175,7 +175,10 @@ export default {
 
 .app-drawer__backdrop {
 	position: fixed;
-	inset: 0;
+	top: var(--nextcloud-header-height, 50px);
+	left: 0;
+	right: 0;
+	bottom: 0;
 	z-index: 99;
 	background: rgba(0, 0, 0, 0.4);
 }
