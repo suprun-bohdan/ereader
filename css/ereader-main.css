@@ -1,7 +1,25 @@
+/* App container: full width and responsive */
+#ereader-app,
 .ereader-app {
-	min-height: 200px;
-	padding: 1rem;
+	min-height: 100vh;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	padding: 0;
 }
+
+/* When Nextcloud wraps app in #content, allow full width for e-reader */
+body.app-ereader #content-wrapper,
+body.app-ereader #content {
+	max-width: none !important;
+	width: 100% !important;
+}
+
+body.app-ereader .app-content {
+	max-width: none !important;
+	width: 100% !important;
+}
+
 .ereader-welcome {
 	text-align: center;
 	padding: 2rem;
