@@ -1,0 +1,11 @@
+.ereader-app {
+	min-height: 200px;
+	padding: 1rem;
+}
+.ereader-welcome {
+	text-align: center;
+	padding: 2rem;
+}
+.ereader-welcome h1 {
+	margin-bottom: 0.5rem;
+}

@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build cache
+.cache/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

@@ -1,0 +1,26 @@
+{
+  "name": "ereader",
+  "version": "0.1.0",
+  "description": "e-reader Nextcloud app",
+  "scripts": {
+    "build": "webpack --node-env production --progress",
+    "dev": "webpack --node-env development --progress",
+    "watch": "webpack --node-env development --progress --watch"
+  },
+  "dependencies": {
+    "@nextcloud/axios": "^2.5.0",
+    "@nextcloud/files": "^3.0.0",
+    "@nextcloud/auth": "^2.0.0",
+    "@nextcloud/l10n": "^2.0.0",
+    "@nextcloud/router": "^2.0.0",
+    "@nextcloud/vue": "^8.0.0",
+    "epubjs": "^0.3.93",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.0"
+  },
+  "devDependencies": {
+    "@nextcloud/webpack-vue-config": "^6.3.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^6.0.1"
+  }
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>ereader</id>
+    <name>e-reader</name>
+    <summary>Read EPUB and PDF books from Nextcloud Files</summary>
+    <description>e-reader app: open books from your Nextcloud Files, read in the browser with progress, bookmarks, TOC and themes. Supports EPUB and PDF.</description>
+    <version>0.1.0</version>
+    <licence>agpl</licence>
+    <author>e-reader</author>
+    <category>multimedia</category>
+    <website>https://github.com/nextcloud/ereader</website>
+    <bugs>https://github.com/nextcloud/ereader/issues</bugs>
+    <repository>https://github.com/nextcloud/ereader</repository>
+    <navigation>
+        <name>e-reader</name>
+        <route>ereader.page.index</route>
+        <order>75</order>
+    </navigation>
+    <dependencies>
+        <nextcloud min-version="28"/>
+        <php min-version="8.1"/>
+    </dependencies>
+</info>
