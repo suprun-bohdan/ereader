@@ -42,6 +42,21 @@
 			>
 				{{ t('ereader', 'Fit page') }}
 			</button>
+			<div class="pdf-viewer__toolbar-group">
+				<label class="pdf-viewer__label" for="pdf-pages-per-view">
+					{{ t('ereader', 'Pages on screen') }}
+				</label>
+				<input
+					id="pdf-pages-per-view"
+					v-model.number="pagesPerViewInput"
+					type="number"
+					min="1"
+					:max="maxPagesPerView"
+					class="pdf-viewer__pages-input"
+					:title="t('ereader', 'Number of pages visible at once')"
+					@input="onPagesPerViewInput"
+				/>
+			</div>
 			<div class="pdf-viewer__toolbar-group pdf-viewer__toolbar-group--page">
 				<button
 					type="button"
@@ -70,7 +85,7 @@
 				</button>
 			</div>
 		</header>
-		<div ref="scrollEl" class="pdf-viewer__scroll" @scroll="onScroll">
+		<div ref="scrollEl" class="pdf-viewer__scroll" @scroll="onScroll" @mouseup="onMouseUp">
 			<div ref="containerEl" class="pdf-viewer__container">
 				<div
 					v-for="pageNum in numPages"
@@ -83,9 +98,19 @@
 						:ref="(el) => setCanvasRef(el, pageNum)"
 						class="pdf-viewer__page"
 					/>
+					<div
+						:ref="(el) => setTextLayerRef(el, pageNum)"
+						class="pdf-viewer__text-layer"
+						aria-hidden="true"
+					/>
 				</div>
 			</div>
 		</div>
+		<SelectionToolbar
+			:visible="toolbarVisible"
+			:position="toolbarPosition"
+			@add="onAddToDictionary"
+		/>
 		<div v-if="loading" class="pdf-viewer__loading">{{ t('ereader', 'Loading…') }}</div>
 		<div v-else-if="error" class="pdf-viewer__error">{{ error }}</div>
 	</div>
@@ -104,9 +129,15 @@ if (typeof window !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
 const MIN_SCALE = 0.5
 const MAX_SCALE = 3
 const ZOOM_STEP = 0.25
+const MIN_PAGES_PER_VIEW = 1
+const MAX_PAGES_PER_VIEW = 6
+
+import SelectionToolbar from './SelectionToolbar.vue'
 
 export default {
 	name: 'PdfViewer',
+	components: { SelectionToolbar },
+	emits: ['add-to-dictionary'],
 	props: {
 		blob: {
 			type: Blob,
@@ -128,11 +159,24 @@ export default {
 			pixelRatio: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1,
 			fitPageScale: 1,
 			fitWidthScale: 1,
+			pagesPerView: 1,
+			pagesPerViewInput: '1',
+			maxPagesPerView: MAX_PAGES_PER_VIEW,
+			toolbarVisible: false,
+			toolbarPosition: { top: 0, left: 0 },
+			selectedText: '',
+			textLayerRefs: {},
+			textLayers: {},
 		}
 	},
 	computed: {
 		scalePercent() {
 			return Math.round(this.scaleFactor * 100)
+		},
+	},
+	watch: {
+		pagesPerView() {
+			this.$nextTick(() => this.renderAllPages())
 		},
 	},
 	async mounted() {
@@ -141,6 +185,9 @@ export default {
 	beforeUnmount() {
 		this.canvasRefs = {}
 		this.pageWrapRefs = {}
+		this.textLayerRefs = {}
+		Object.values(this.textLayers).forEach((tl) => { if (tl && tl.cancel) tl.cancel() })
+		this.textLayers = {}
 		if (this.$refs.scrollEl) {
 			this.$refs.scrollEl.removeEventListener('scroll', this.onScroll)
 		}
@@ -158,6 +205,48 @@ export default {
 		},
 		setPageWrapRef(el, pageNum) {
 			if (el) this.pageWrapRefs[pageNum] = el
+		},
+		setTextLayerRef(el, pageNum) {
+			if (el) this.textLayerRefs[pageNum] = el
+		},
+		onMouseUp() {
+			const sel = window.getSelection()
+			const text = (sel && sel.toString ? sel.toString() : '').trim()
+			this.selectedText = text
+			if (!text) {
+				this.toolbarVisible = false
+				return
+			}
+			try {
+				const range = sel.getRangeAt(0)
+				const rect = range.getBoundingClientRect()
+				this.toolbarPosition = {
+					top: rect.top + rect.height / 2,
+					left: rect.left + rect.width / 2,
+				}
+				this.toolbarVisible = true
+			} catch (_) {
+				this.toolbarVisible = false
+			}
+		},
+		onAddToDictionary() {
+			if (this.selectedText) {
+				this.$emit('add-to-dictionary', this.selectedText)
+				this.toolbarVisible = false
+				this.selectedText = ''
+				if (window.getSelection()) window.getSelection().removeAllRanges()
+			}
+		},
+		onPagesPerViewInput() {
+			const v = parseInt(this.pagesPerViewInput, 10)
+			if (!Number.isFinite(v) || v < MIN_PAGES_PER_VIEW) {
+				this.pagesPerViewInput = String(MIN_PAGES_PER_VIEW)
+				this.pagesPerView = MIN_PAGES_PER_VIEW
+				return
+			}
+			const clamped = Math.min(MAX_PAGES_PER_VIEW, Math.max(MIN_PAGES_PER_VIEW, v))
+			this.pagesPerViewInput = String(clamped)
+			this.pagesPerView = clamped
 		},
 		zoomIn() {
 			this.scaleFactor = Math.min(this.maxScale, this.scaleFactor + ZOOM_STEP)
@@ -245,8 +334,11 @@ export default {
 		async renderAllPages() {
 			if (!this.pdfDoc || !this.$refs.containerEl || !this.$refs.scrollEl) return
 			const scrollEl = this.$refs.scrollEl
-			const baseWidth = scrollEl.clientWidth || 800
-			const baseHeight = scrollEl.clientHeight || 600
+			const viewWidth = scrollEl.clientWidth || 800
+			const viewHeight = scrollEl.clientHeight || 600
+			const perPage = Math.max(1, this.pagesPerView || 1)
+			const baseWidth = viewWidth / perPage
+			const baseHeight = viewHeight
 			for (let n = 1; n <= this.numPages; n++) {
 				const canvas = this.canvasRefs[n]
 				if (!canvas) continue
@@ -266,6 +358,24 @@ export default {
 					canvasContext: ctx,
 					viewport,
 				}).promise
+				const textLayerEl = this.textLayerRefs[n]
+				if (textLayerEl && pdfjsLib.TextLayer) {
+					if (this.textLayers[n] && this.textLayers[n].cancel) {
+						this.textLayers[n].cancel()
+					}
+					textLayerEl.innerHTML = ''
+					const displayViewport = page.getViewport({ scale: baseScale * this.scaleFactor })
+					textLayerEl.style.width = displayViewport.width + 'px'
+					textLayerEl.style.height = displayViewport.height + 'px'
+					const textContent = await page.getTextContent()
+					const textLayer = new pdfjsLib.TextLayer({
+						textContentSource: textContent,
+						container: textLayerEl,
+						viewport: displayViewport,
+					})
+					this.textLayers[n] = textLayer
+					await textLayer.render()
+				}
 			}
 		},
 	},
@@ -343,6 +453,28 @@ export default {
 	text-align: center;
 }
 
+.pdf-viewer__label {
+	font-size: 0.875rem;
+	white-space: nowrap;
+	color: var(--ereader-primary-text);
+}
+
+.pdf-viewer__pages-input {
+	width: 2.5rem;
+	padding: 0.25rem 0.35rem;
+	font-size: 0.875rem;
+	text-align: center;
+	border: 1px solid var(--ereader-border);
+	border-radius: var(--ereader-radius-sm);
+	background: var(--ereader-surface);
+	color: var(--ereader-primary-text);
+}
+
+.pdf-viewer__pages-input:focus {
+	outline: none;
+	border-color: var(--ereader-primary, #1976d2);
+}
+
 .pdf-viewer__page-indicator {
 	font-size: 0.875rem;
 	white-space: nowrap;
@@ -369,9 +501,28 @@ export default {
 }
 
 .pdf-viewer__page-wrap {
+	position: relative;
 	flex: 0 0 auto;
 	scroll-snap-align: center;
 	scroll-snap-stop: always;
+}
+
+.pdf-viewer__text-layer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+	line-height: 1;
+	user-select: text;
+	pointer-events: auto;
+}
+
+.pdf-viewer__text-layer span {
+	color: transparent;
+	position: absolute;
+	white-space: pre;
+	transform-origin: 0 0;
+	pointer-events: auto;
 }
 
 .pdf-viewer__page {
