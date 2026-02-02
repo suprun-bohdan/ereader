@@ -51,8 +51,14 @@ export default {
 	display: flex;
 	flex-direction: column;
 	height: 100vh;
+	min-height: 100vh;
+	width: 100%;
+	max-width: 100vw;
+	box-sizing: border-box;
+	overflow: hidden;
 }
 .ereader-read__header {
+	flex-shrink: 0;
 	padding: 0.5rem 1rem;
 	background: var(--color-background-hover, #f5f5f5);
 	border-bottom: 1px solid var(--color-border, #ddd);
@@ -68,12 +74,16 @@ export default {
 	flex: 1;
 	position: relative;
 	min-height: 0;
+	width: 100%;
+	overflow: hidden;
 }
 .ereader-read__iframe {
 	position: absolute;
 	inset: 0;
 	width: 100%;
 	height: 100%;
+	min-width: 100%;
+	min-height: 100%;
 	border: none;
 }
 .ereader-read__error {
