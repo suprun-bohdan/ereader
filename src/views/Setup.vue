@@ -7,6 +7,8 @@
 			<div v-if="loading" class="ereader-setup__loading">{{ t('ereader', 'Loading…') }}</div>
 
 			<template v-else>
+				<p v-if="error" class="ereader-setup__error ereader-setup__error--top">{{ error }}</p>
+
 				<div class="ereader-setup__breadcrumb">
 					<button type="button" class="ereader-setup__breadcrumb-item" @click="path = ''">
 						{{ t('ereader', 'Home') }}
@@ -26,14 +28,20 @@
 				</div>
 
 				<ul class="ereader-setup__folders">
-					<li v-for="folder in folders" :key="folder.path" class="ereader-setup__folder">
-						<button type="button" class="ereader-setup__folder-btn" @click="path = folder.path">
+					<li class="ereader-setup__folder ereader-setup__folder--root">
+						<button type="button" class="ereader-setup__folder-btn ereader-setup__folder-btn--root" @click="selectCurrent">
+							<span class="ereader-setup__folder-icon">📁</span>
+							{{ path === '' ? t('ereader', 'My files — use as books folder') : t('ereader', 'Use this folder as books location') }}
+						</button>
+					</li>
+					<li v-for="folder in folders" :key="folder.path || folder.name" class="ereader-setup__folder">
+						<button type="button" class="ereader-setup__folder-btn" @click="path = folder.path || ''">
 							<span class="ereader-setup__folder-icon">📁</span>
 							{{ folder.name }}
 						</button>
 					</li>
 					<li v-if="folders.length === 0 && !loading" class="ereader-setup__empty">
-						{{ t('ereader', 'No subfolders here. Use the button above to select this folder.') }}
+						{{ t('ereader', 'No subfolders in this folder. Use the option above to select this location.') }}
 					</li>
 				</ul>
 			</template>
@@ -83,10 +91,15 @@ export default {
 					this.error = data.error ? String(data.error) : ''
 				} else {
 					this.folders = Array.isArray(data) ? data : []
-					this.error = ''
+					this.error = data && data.error ? String(data.error) : ''
 				}
 			} catch (e) {
-				this.error = e.response?.data?.error || e.message || this.t('ereader', 'Failed to load folders')
+				const res = e.response
+				const errBody = res?.data
+				const errMsg = (errBody && typeof errBody === 'object' && (errBody.error || errBody.message))
+					? (errBody.error || errBody.message)
+					: (res?.data ? String(res.data) : e.message)
+				this.error = errMsg || this.t('ereader', 'Failed to load folders')
 				this.folders = []
 			} finally {
 				this.loading = false
@@ -195,6 +208,17 @@ export default {
 }
 .ereader-setup__folder-btn:hover {
 	background: var(--color-background-dark, #e5e5e5);
+}
+.ereader-setup__folder--root {
+	margin-bottom: 0.5rem;
+}
+.ereader-setup__folder-btn--root {
+	background: var(--color-primary-light, #e6f4ff);
+	color: var(--color-primary-text, #006aa3);
+	font-weight: 600;
+}
+.ereader-setup__folder-btn--root:hover {
+	background: var(--color-primary-hover, #cce8ff);
 }
 .ereader-setup__folder-icon {
 	font-size: 1.2rem;

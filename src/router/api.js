@@ -22,8 +22,11 @@ export async function setConfig(booksFolder) {
 }
 
 export async function getFolders(path = '') {
-	const { data } = await api.get('/folders', { params: { path } })
-	return data
+	const res = await api.get('/folders', { params: { path } })
+	const data = res.data
+	// Unwrap if response is wrapped (e.g. { data: { folders } } or { ocs: { data } })
+	const body = data?.data ?? data?.ocs?.data ?? data
+	return typeof body === 'object' && body !== null ? body : (data ?? {})
 }
 
 export async function getBooks() {
