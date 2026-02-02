@@ -34,6 +34,14 @@
 			>
 				{{ t('ereader', 'Fit width') }}
 			</button>
+			<button
+				type="button"
+				class="pdf-viewer__btn pdf-viewer__btn--text"
+				:title="t('ereader', 'Fit page')"
+				@click="fitPage"
+			>
+				{{ t('ereader', 'Fit page') }}
+			</button>
 			<div class="pdf-viewer__toolbar-group pdf-viewer__toolbar-group--page">
 				<button
 					type="button"
@@ -161,34 +169,36 @@ export default {
 			this.scaleFactor = 1
 			this.$nextTick(() => this.renderAllPages())
 		},
+		fitPage() {
+			this.scaleFactor = this.fitPageScale
+			this.$nextTick(() => this.renderAllPages())
+		},
 		goToPage(pageNum) {
 			const n = Math.max(1, Math.min(this.numPages, pageNum))
-			const el = this.pageWrapRefs[n]
-			if (el && this.$refs.scrollEl) {
-				el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-			}
 			this.currentPage = n
+			this.$nextTick(() => {
+				const el = this.pageWrapRefs[n]
+				if (el && this.$refs.scrollEl) {
+					el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+				}
+			})
 		},
 		onScroll() {
 			const scrollEl = this.$refs.scrollEl
 			if (!scrollEl || this.numPages === 0) return
-			const scrollTop = scrollEl.scrollTop
-			const viewportMid = scrollTop + scrollEl.clientHeight / 2
+			const scrollLeft = scrollEl.scrollLeft
+			const viewportCenter = scrollLeft + scrollEl.clientWidth / 2
 			let page = 1
+			let bestDist = Infinity
 			for (let n = 1; n <= this.numPages; n++) {
 				const wrap = this.pageWrapRefs[n]
 				if (!wrap) continue
-				const top = wrap.offsetTop
-				const bottom = top + wrap.offsetHeight
-				if (viewportMid >= top && viewportMid <= bottom) {
+				const wrapCenter = wrap.offsetLeft + wrap.offsetWidth / 2
+				const dist = Math.abs(viewportCenter - wrapCenter)
+				if (dist < bestDist) {
+					bestDist = dist
 					page = n
-					break
 				}
-				if (viewportMid < bottom) {
-					page = n
-					break
-				}
-				page = n
 			}
 			this.currentPage = page
 		},
@@ -203,6 +213,8 @@ export default {
 				this.loading = false
 				await this.$nextTick()
 				await this.$nextTick()
+				await this.computeFitPageScale()
+				this.scaleFactor = this.fitPageScale
 				await this.renderAllPages()
 				if (this.$refs.scrollEl) {
 					this.$refs.scrollEl.addEventListener('scroll', this.onScroll, { passive: true })
@@ -212,15 +224,30 @@ export default {
 				this.loading = false
 			}
 		},
+		async computeFitPageScale() {
+			if (!this.pdfDoc || !this.$refs.scrollEl) return
+			const scrollEl = this.$refs.scrollEl
+			const w = scrollEl.clientWidth || 800
+			const h = scrollEl.clientHeight || 600
+			const firstPage = await this.pdfDoc.getPage(1)
+			const vp = firstPage.getViewport({ scale: 1 })
+			const scaleW = w / vp.width
+			const scaleH = h / vp.height
+			this.fitPageScale = Math.min(scaleW, scaleH, this.maxScale)
+			if (this.scaleFactor === 1) {
+				this.scaleFactor = this.fitPageScale
+			}
+		},
 		async renderAllPages() {
-			if (!this.pdfDoc || !this.$refs.containerEl) return
-			const container = this.$refs.containerEl
-			const baseWidth = container.clientWidth || 800
+			if (!this.pdfDoc || !this.$refs.containerEl || !this.$refs.scrollEl) return
+			const scrollEl = this.$refs.scrollEl
+			const baseWidth = scrollEl.clientWidth || 800
 			for (let n = 1; n <= this.numPages; n++) {
 				const canvas = this.canvasRefs[n]
 				if (!canvas) continue
 				const page = await this.pdfDoc.getPage(n)
-				const baseScale = baseWidth / page.getViewport({ scale: 1 }).width
+				const vp1 = page.getViewport({ scale: 1 })
+				const baseScale = baseWidth / vp1.width
 				const effectiveScale = baseScale * this.scaleFactor * this.pixelRatio
 				const viewport = page.getViewport({ scale: effectiveScale })
 				canvas.width = viewport.width
@@ -317,20 +344,27 @@ export default {
 .pdf-viewer__scroll {
 	flex: 1;
 	min-height: 0;
-	overflow: auto;
+	overflow-x: auto;
+	overflow-y: auto;
 	scroll-behavior: smooth;
+	scroll-snap-type: x mandatory;
 }
 
 .pdf-viewer__container {
 	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding: 1rem 0;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: flex-start;
+	justify-content: flex-start;
+	padding: 1rem;
 	gap: 1rem;
+	min-height: min-content;
 }
 
 .pdf-viewer__page-wrap {
-	display: block;
+	flex: 0 0 auto;
+	scroll-snap-align: center;
+	scroll-snap-stop: always;
 }
 
 .pdf-viewer__page {
