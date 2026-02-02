@@ -35,13 +35,15 @@ class ConfigApiController extends ApiController {
 
 	#[CORS]
 	#[NoAdminRequired]
-	public function update(string $books_folder = ''): DataResponse {
+	public function update(): DataResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new DataResponse([], 401);
 		}
-		$this->configService->setBooksFolder($user->getUID(), $books_folder);
-		return new DataResponse(['books_folder' => trim($books_folder, '/')]);
+		$booksFolder = $this->request->getParam('books_folder', '');
+		$booksFolder = is_string($booksFolder) ? $booksFolder : '';
+		$this->configService->setBooksFolder($user->getUID(), $booksFolder);
+		return new DataResponse(['books_folder' => trim($booksFolder, '/')]);
 	}
 
 	#[NoAdminRequired]
