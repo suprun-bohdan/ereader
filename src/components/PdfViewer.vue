@@ -126,6 +126,8 @@ export default {
 			minScale: MIN_SCALE,
 			maxScale: MAX_SCALE,
 			pixelRatio: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1,
+			fitPageScale: 1,
+			fitWidthScale: 1,
 		}
 	},
 	computed: {
@@ -166,7 +168,7 @@ export default {
 			this.$nextTick(() => this.renderAllPages())
 		},
 		fitWidth() {
-			this.scaleFactor = 1
+			this.scaleFactor = this.fitWidthScale
 			this.$nextTick(() => this.renderAllPages())
 		},
 		fitPage() {
@@ -233,7 +235,9 @@ export default {
 			const vp = firstPage.getViewport({ scale: 1 })
 			const scaleW = w / vp.width
 			const scaleH = h / vp.height
-			this.fitPageScale = Math.min(scaleW, scaleH, this.maxScale)
+			const fitBoth = Math.min(scaleW, scaleH, this.maxScale)
+			this.fitPageScale = 1
+			this.fitWidthScale = Math.min(scaleW / fitBoth, this.maxScale)
 			if (this.scaleFactor === 1) {
 				this.scaleFactor = this.fitPageScale
 			}
@@ -242,12 +246,15 @@ export default {
 			if (!this.pdfDoc || !this.$refs.containerEl || !this.$refs.scrollEl) return
 			const scrollEl = this.$refs.scrollEl
 			const baseWidth = scrollEl.clientWidth || 800
+			const baseHeight = scrollEl.clientHeight || 600
 			for (let n = 1; n <= this.numPages; n++) {
 				const canvas = this.canvasRefs[n]
 				if (!canvas) continue
 				const page = await this.pdfDoc.getPage(n)
 				const vp1 = page.getViewport({ scale: 1 })
-				const baseScale = baseWidth / vp1.width
+				const scaleByWidth = baseWidth / vp1.width
+				const scaleByHeight = baseHeight / vp1.height
+				const baseScale = Math.min(scaleByWidth, scaleByHeight)
 				const effectiveScale = baseScale * this.scaleFactor * this.pixelRatio
 				const viewport = page.getViewport({ scale: effectiveScale })
 				canvas.width = viewport.width
