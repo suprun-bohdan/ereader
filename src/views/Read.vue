@@ -5,14 +5,15 @@
 		</header>
 		<div class="ereader-read__area">
 			<div v-if="error" class="ereader-read__error">{{ error }}</div>
+			<div v-else-if="!isEpub && loadingPdf" class="ereader-read__loading">{{ t('ereader', 'Loading…') }}</div>
 			<EpubViewer v-else-if="isEpub" :url="streamUrl" />
-			<iframe v-else :src="streamUrl" class="ereader-read__iframe" title="Book content"></iframe>
+			<iframe v-else-if="pdfBlobUrl" :src="pdfBlobUrl" class="ereader-read__iframe" title="Book content"></iframe>
 		</div>
 	</div>
 </template>
 
 <script>
-import { getStreamUrl } from '../router/api'
+import { getStreamUrl, getStreamBlob } from '../router/api'
 import { translate as t } from '@nextcloud/l10n'
 import EpubViewer from '../components/EpubViewer.vue'
 
@@ -30,6 +31,8 @@ export default {
 	data() {
 		return {
 			error: '',
+			loadingPdf: false,
+			pdfBlobUrl: null,
 		}
 	},
 	computed: {
@@ -39,6 +42,27 @@ export default {
 		isEpub() {
 			return this.$route.query?.mime === MIME_EPUB
 		},
+	},
+	async mounted() {
+		if (this.isEpub) return
+		this.loadingPdf = true
+		this.error = ''
+		try {
+			const blob = await getStreamBlob(Number(this.fileId))
+			this.pdfBlobUrl = URL.createObjectURL(blob)
+		} catch (e) {
+			this.error = e.response?.status === 403
+				? this.t('ereader', 'Access denied. Please refresh the page and try again.')
+				: (e.message || this.t('ereader', 'Failed to load the file.'))
+		} finally {
+			this.loadingPdf = false
+		}
+	},
+	beforeUnmount() {
+		if (this.pdfBlobUrl) {
+			URL.revokeObjectURL(this.pdfBlobUrl)
+			this.pdfBlobUrl = null
+		}
 	},
 	methods: {
 		t,
@@ -86,7 +110,8 @@ export default {
 	min-height: 100%;
 	border: none;
 }
-.ereader-read__error {
+.ereader-read__error,
+.ereader-read__loading {
 	position: absolute;
 	inset: 0;
 	display: flex;
@@ -94,6 +119,9 @@ export default {
 	justify-content: center;
 	padding: 2rem;
 	text-align: center;
+	color: var(--color-text-lighter, #666);
+}
+.ereader-read__error {
 	color: var(--color-error, #c00);
 }
 </style>

@@ -60,3 +60,10 @@ export async function deleteBookmark(id) {
 export function getStreamUrl(fileId) {
 	return generateUrl(`/apps/ereader/api/v1/file/${fileId}/stream`)
 }
+
+/** Fetch file stream as Blob (with CSRF token). Use blob URL in iframe to avoid frame-ancestors blocking. */
+export async function getStreamBlob(fileId) {
+	const url = getStreamUrl(fileId)
+	const { data } = await api.get(url, { responseType: 'blob' })
+	return data
+}
