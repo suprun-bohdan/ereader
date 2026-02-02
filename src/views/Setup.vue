@@ -130,19 +130,21 @@ export default {
 	min-height: 80vh;
 }
 .ereader-setup__card {
-	background: var(--color-main-background, #fff);
-	border-radius: var(--border-radius-large, 8px);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	background: var(--ereader-surface);
+	border-radius: var(--ereader-radius);
+	box-shadow: var(--ereader-card-shadow);
 	padding: 2rem;
 	max-width: 480px;
 	width: 100%;
+	border: 1px solid var(--ereader-border);
 }
 .ereader-setup__title {
 	margin: 0 0 0.5rem;
 	font-size: 1.5rem;
+	color: var(--ereader-text);
 }
 .ereader-setup__desc {
-	color: var(--color-text-lighter, #666);
+	color: var(--ereader-text-secondary);
 	margin: 0 0 1.5rem;
 }
 .ereader-setup__breadcrumb {
@@ -156,30 +158,36 @@ export default {
 .ereader-setup__breadcrumb-item {
 	background: none;
 	border: none;
-	color: var(--color-primary, #0082c9);
+	color: var(--ereader-primary);
 	cursor: pointer;
-	padding: 0.2rem 0.4rem;
-	border-radius: 4px;
+	padding: 0.35rem 0.5rem;
+	border-radius: var(--ereader-radius-sm);
 }
 .ereader-setup__breadcrumb-item:hover {
 	text-decoration: underline;
+	background: var(--ereader-background);
 }
 .ereader-setup__breadcrumb-sep {
-	color: var(--color-text-lighter, #999);
+	color: var(--ereader-text-secondary);
 }
 .ereader-setup__actions {
 	margin-bottom: 1rem;
 }
 .ereader-setup__btn {
-	padding: 0.5rem 1rem;
-	border-radius: var(--border-radius, 4px);
+	padding: 0.6rem 1.25rem;
+	border-radius: var(--ereader-radius-sm);
 	border: none;
 	cursor: pointer;
 	font-size: 1rem;
+	font-weight: 500;
+	transition: background 0.15s;
 }
 .ereader-setup__btn.primary {
-	background: var(--color-primary, #0082c9);
-	color: #fff;
+	background: var(--ereader-fill-button);
+	color: var(--ereader-primary-text);
+}
+.ereader-setup__btn.primary:hover:not(:disabled) {
+	filter: brightness(1.05);
 }
 .ereader-setup__btn:disabled {
 	opacity: 0.6;
@@ -199,32 +207,36 @@ export default {
 	gap: 0.5rem;
 	width: 100%;
 	text-align: left;
-	padding: 0.5rem 0.75rem;
-	background: var(--color-background-hover, #f5f5f5);
-	border: none;
-	border-radius: 4px;
+	padding: 0.6rem 0.75rem;
+	background: var(--ereader-background);
+	border: 1px solid var(--ereader-border);
+	border-radius: var(--ereader-radius-sm);
 	cursor: pointer;
 	font-size: 1rem;
+	color: var(--ereader-text);
+	transition: background 0.15s;
 }
 .ereader-setup__folder-btn:hover {
-	background: var(--color-background-dark, #e5e5e5);
+	background: var(--ereader-surface);
+	box-shadow: var(--ereader-card-shadow);
 }
 .ereader-setup__folder--root {
 	margin-bottom: 0.5rem;
 }
 .ereader-setup__folder-btn--root {
-	background: var(--color-primary-light, #e6f4ff);
-	color: var(--color-primary-text, #006aa3);
+	background: var(--ereader-primary);
+	color: var(--ereader-primary-text);
+	border-color: var(--ereader-primary);
 	font-weight: 600;
 }
 .ereader-setup__folder-btn--root:hover {
-	background: var(--color-primary-hover, #cce8ff);
+	filter: brightness(1.08);
 }
 .ereader-setup__folder-icon {
 	font-size: 1.2rem;
 }
 .ereader-setup__empty {
-	color: var(--color-text-lighter, #666);
+	color: var(--ereader-text-secondary);
 	padding: 0.5rem 0;
 	font-size: 0.9rem;
 }
@@ -233,6 +245,6 @@ export default {
 	margin: 1rem 0 0;
 }
 .ereader-setup__error {
-	color: var(--color-error, #c00);
+	color: var(--ereader-error);
 }
 </style>
